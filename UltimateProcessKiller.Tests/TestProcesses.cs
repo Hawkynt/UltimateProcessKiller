@@ -39,6 +39,24 @@ internal sealed partial class TestProcesses : IDisposable {
     return this.Start("/bin/sh", "-c", backgrounds + "wait");
   }
 
+  /// <summary>
+  /// A process that leaves a zombie child and then blocks without ever reaping it. Uses a fork in
+  /// Python rather than a shell trick, because shell reaping behaviour differs (bash keeps the
+  /// zombie, dash reaps it), which made the shell version pass locally and fail on the CI runner.
+  /// Returns null when no Python is available, so the caller can skip.
+  /// </summary>
+  public Process? ZombieMaker() {
+    const string script = "import os,time\npid=os.fork()\nif pid==0: os._exit(0)\ntime.sleep(60)";
+    foreach (var python in new[] { "python3", "python" })
+      try {
+        return this.Start(python, "-c", script);
+      } catch {
+        // try the next interpreter
+      }
+
+    return null;
+  }
+
   public Process Start(string file, params string[] args) {
     var info = new ProcessStartInfo(file) { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
     foreach (var arg in args)

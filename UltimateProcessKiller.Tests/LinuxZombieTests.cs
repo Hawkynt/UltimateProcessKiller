@@ -23,10 +23,12 @@ public sealed class LinuxZombieTests {
 
   [Test]
   public void ReapZombie_ClearsAZombieByRemovingItsStuckParent() {
-    // A shell that kills a background child then blocks, so the child lingers as a zombie.
-    var shell = this._procs.Start("/bin/sh", "-c", "sleep 30 & c=$!; kill -9 $c; sleep 30");
-    var shellPid = shell.Id;
+    // A parent that forks a child which exits, then blocks without reaping — a lasting zombie.
+    var parent = this._procs.ZombieMaker();
+    if (parent is null)
+      Assert.Ignore("no Python available to fork a deterministic zombie");
 
+    var shellPid = parent.Id;
     var zombiePid = WaitForZombieChild(shellPid);
     Assert.That(zombiePid, Is.GreaterThan(0), "no zombie appeared");
     Assert.That(this._killer.IsZombie(zombiePid), Is.True);
