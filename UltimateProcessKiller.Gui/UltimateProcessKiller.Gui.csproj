@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>upk-gui</AssemblyName>
+    <RootNamespace>UltimateProcessKiller.Gui</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The cross-platform UI: NativeForms core plus one native backend per desktop. -->
+    <PackageReference Include="Hawkynt.NativeForms" Version="1.0.0.227" />
+    <PackageReference Include="Hawkynt.NativeForms.Backends.Windows" Version="1.0.0.63" />
+    <PackageReference Include="Hawkynt.NativeForms.Backends.Gtk" Version="1.0.0.73" />
+    <PackageReference Include="Hawkynt.NativeForms.Backends.MacOS" Version="1.0.0.92" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UltimateProcessKiller.Core\UltimateProcessKiller.Core.csproj" />
+  </ItemGroup>
+
+</Project>

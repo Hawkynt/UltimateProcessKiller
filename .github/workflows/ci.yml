@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call: {}
+
+# Force JavaScript-based actions to run on Node 24 instead of the deprecated Node 20 ahead of
+# the 2026-06-16 hard cutover, until we bump each action to a Node-24-native major version.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  test:
+    name: test ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0                          # version.pl needs full history
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore
+        run: dotnet restore UltimateProcessKiller.sln
+      - name: Build
+        run: dotnet build UltimateProcessKiller.sln --configuration Release --no-restore
+      # The integration tests kill real child processes; the ptrace-based rungs need to trace their
+      # own descendants, which yama ptrace_scope=1 permits, so no extra privilege is required.
+      - name: Test
+        run: dotnet test UltimateProcessKiller.sln --configuration Release --no-build --logger "trx;LogFileName=tests.trx"
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}
+          path: '**/TestResults/*.trx'
+          if-no-files-found: warn
+
+  aot:
+    name: aot ${{ matrix.rid }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: windows-latest
+            rid: win-x64
+          - os: macos-latest
+            rid: osx-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install NativeAOT prerequisites (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+      # Proves the headline goal: the CLI and GUI compile ahead-of-time on every platform.
+      # TreatWarningsAsErrors makes any trim/AOT (IL2xxx/IL3xxx) warning fail the build, so
+      # trimmability can never silently regress.
+      - name: Publish the CLI with NativeAOT (trim/AOT warnings are errors)
+        shell: bash
+        run: >
+          dotnet publish UltimateProcessKiller.Cli/UltimateProcessKiller.Cli.csproj
+          --configuration Release --runtime ${{ matrix.rid }} --self-contained
+          -p:PublishAot=true -p:TreatWarningsAsErrors=true
+          -o aot-cli
+      - name: Publish the GUI with NativeAOT (trim/AOT warnings are errors)
+        shell: bash
+        run: >
+          dotnet publish UltimateProcessKiller.Gui/UltimateProcessKiller.Gui.csproj
+          --configuration Release --runtime ${{ matrix.rid }} --self-contained
+          -p:PublishAot=true -p:TreatWarningsAsErrors=true
+          -o aot-gui
+      - name: Report native binary sizes
+        shell: bash
+        run: |
+          echo "### NativeAOT size — ${{ matrix.rid }}" >> "$GITHUB_STEP_SUMMARY"
+          ls -lh aot-cli/upk* aot-gui/upk-gui* 2>/dev/null | awk '{print $5, $NF}' >> "$GITHUB_STEP_SUMMARY" || true
+
+  gui-smoke:
+    name: gui smoke (linux/gtk)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      # The GUI needs GTK and a display; Xvfb is enough — the form is constructed, realized and shown,
+      # which is where a backend or layout regression would throw. --demo fills it with fixed data and
+      # --exit-after closes it, so the job is a genuine "the GUI starts on this platform" gate.
+      - name: Install GTK and a virtual display
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgtk-3-0 xvfb
+      - name: Build the GUI
+        run: dotnet build UltimateProcessKiller.Gui/UltimateProcessKiller.Gui.csproj --configuration Release
+      - name: Launch the GUI headless
+        run: >
+          xvfb-run -a --server-args="-screen 0 960x640x24"
+          dotnet run --project UltimateProcessKiller.Gui --configuration Release --no-build -- --demo --exit-after 3

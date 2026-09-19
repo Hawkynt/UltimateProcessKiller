@@ -1,0 +1,35 @@
+<Project>
+
+  <!-- Shared defaults for every project in the repo. The toolkit ships a core library, a CLI and a
+       GUI plus tests; they all agree on the TFM, language level and authorship metadata here so no
+       single csproj has to repeat it. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <Deterministic>true</Deterministic>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>Hawkynt</Authors>
+    <Company>Hawkynt</Company>
+    <Product>UltimateProcessKiller</Product>
+    <Copyright>Copyright (c) Hawkynt</Copyright>
+    <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Hawkynt/UltimateProcessKiller</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Hawkynt/UltimateProcessKiller.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+  </PropertyGroup>
+
+  <!-- Release builds ship a single clean binary: symbols embedded nowhere, no loose PDBs. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <AllowedReferenceRelatedFileExtensions>none</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
+
+</Project>

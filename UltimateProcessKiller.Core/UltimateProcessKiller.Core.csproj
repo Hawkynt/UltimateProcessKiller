@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>UltimateProcessKiller.Core</AssemblyName>
+    <RootNamespace>UltimateProcessKiller</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="UltimateProcessKiller.Tests" />
+  </ItemGroup>
+
+</Project>

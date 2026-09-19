@@ -1,0 +1,80 @@
+name: Nightly
+
+# Fires automatically after CI passes on main. A red CI run never produces a nightly, so the
+# "latest nightly" always points at tested code, and it builds the exact SHA CI validated (not the
+# branch tip).
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nightly
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  build:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    uses: ./.github/workflows/_build.yml
+    with:
+      ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+          fetch-depth: 0                         # update-changelog.mjs reads git log
+      - name: Compute nightly tag
+        run: echo "TAG=nightly-$(date -u +%Y%m%d)" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: app-*
+          merge-multiple: true
+          path: dist
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # --notes-only: CHANGELOG.md is committed by release.yml exclusively; writing it here would be
+      # silently discarded with the runner workspace.
+      - name: Generate release notes (bucketed by + - * # !)
+        run: node .github/workflows/scripts/update-changelog.mjs --nightly --notes-only --notes RELEASE_NOTES.md
+
+      # Same-day re-run: drop the existing nightly release AND its tag first, so the tag points at the
+      # SHA actually built rather than the morning's.
+      - name: Replace same-day nightly (release + tag), if any
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete "$TAG" --cleanup-tag --yes || true
+      - name: Publish nightly prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          name: ${{ env.TAG }}
+          target_commitish: ${{ github.event.workflow_run.head_sha || github.sha }}
+          prerelease: true
+          files: dist/*
+          body_path: RELEASE_NOTES.md
+
+  prune:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: GFS prune of old nightlies (7 daily + 4 weekly + 3 monthly)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node .github/workflows/scripts/prune-nightlies.mjs
