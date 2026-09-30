@@ -16,7 +16,7 @@ mkdir -p "$OUT"
 export DISPLAY=:99
 export GDK_BACKEND=x11
 
-Xvfb :99 -screen 0 940x620x24 >/tmp/xvfb.log 2>&1 &
+Xvfb :99 -screen 0 960x720x24 >/tmp/xvfb.log 2>&1 &
 XVFB=$!
 sleep 2
 "$HERE/screenshot-wm" 2>/tmp/wm.log &
