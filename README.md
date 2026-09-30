@@ -52,7 +52,9 @@ surgical ones deliberately.
 - **A scriptable CLI (`upk`)** — target by PID or name, apply one strategy or `--escalate` the whole
   ladder, with `--json` output and a `--dry-run`.
 - **A lightweight GUI** on [NativeForms](https://github.com/Hawkynt/NativeForms): trim/AOT-friendly,
-  native-themed, the same window on every desktop.
+  native-themed, the same window on every desktop. Processes are shown as a parent/child **tree**, each
+  strategy carries an icon and a plain-language description, and terminations run off the UI thread so
+  the window stays responsive.
 - **Strategies as a library.** `UltimateProcessKiller.Core` is a plain, reflection-free, AOT-compatible
   API you can call directly, independent of either front end.
 - **A thin, auditable native layer** — source-generated `LibraryImport` over `ntdll`/`kernel32`/`user32`
@@ -196,6 +198,15 @@ The core library and the CLI have no dependency beyond the BCL.
 ```bash
 dotnet build -c Release
 dotnet test -c Release
+```
+
+Build a single self-contained executable for one platform (no .NET install needed to run it). Each app
+carries publish profiles for `win-x64`, `linux-x64` and `osx-arm64`, so Visual Studio's **Publish** and
+the command line produce the same trimmed single file:
+
+```bash
+dotnet publish UltimateProcessKiller.Cli -c Release -p:PublishProfile=linux-x64   # or win-x64 / osx-arm64
+dotnet publish UltimateProcessKiller.Gui -c Release -p:PublishProfile=linux-x64
 ```
 
 ## ❤️ Support

@@ -38,6 +38,16 @@ public sealed class CrossPlatformTests {
   }
 
   [Test]
+  public void ListReportsParentIdsWhereThePlatformExposesThem() {
+    var all = ProcessSnapshotSource.List();
+    Assert.That(all.Select(s => s.ParentId), Has.All.GreaterThanOrEqualTo(0));
+
+    // Linux (/proc) and Windows (Toolhelp) both expose parents; at least one must be non-zero.
+    if (OperatingSystem.IsLinux() || OperatingSystem.IsWindows())
+      Assert.That(all.Any(s => s.ParentId != 0), Is.True, "no parent ids were discovered");
+  }
+
+  [Test]
   public void ByNameFindsTheTestHostAndIgnoresExeSuffix() {
     var self = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
     Assert.That(ProcessSnapshotSource.ByName(self).Select(s => s.Id), Does.Contain(Environment.ProcessId));
