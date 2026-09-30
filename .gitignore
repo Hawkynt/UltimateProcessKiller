@@ -24,5 +24,9 @@ package-lock.json
 *.ilk
 *.pdb.map
 
+# Compiled screenshot helpers (built in CI from the .c sources)
+.github/workflows/scripts/screenshot-wm
+.github/workflows/scripts/lswin
+
 # Claude Code / agent local state
 .claude

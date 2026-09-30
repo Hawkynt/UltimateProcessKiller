@@ -19,6 +19,8 @@
 > a process's memory — for the last stubborn process that everything else gave up on, usable from a CLI
 > or a small NativeForms GUI.
 
+![The UltimateProcessKiller GUI after escalating a stubborn process](docs/screenshots/main.png)
+
 ## 🧭 Vision
 
 Killing a process is supposed to be one call. In practice a process can outlive that call: a driver or
@@ -129,13 +131,24 @@ var report = ProcessExecutioner.Escalate(killer, 1234, new EscalationOptions { A
 Console.WriteLine(report.Succeeded ? "gone" : "survived everything");
 ```
 
+## 🖼️ Screenshots
+
+The GUI lists running processes on the left and the strategy ladder on the right; the log records every
+attempt, gentlest rung first.
+
+![The main window after escalating a stubborn process to termination](docs/screenshots/main.png)
+
+Destructive rungs are gated behind a checkbox. With it ticked, the ladder can run all the way down to a
+memory overwrite, and the log shows every rung it took:
+
+![A destructive escalation ending in a memory overwrite](docs/screenshots/destructive.png)
+
 ## 🗺️ Roadmap
 
 - **macOS deep rungs.** `attach-debugger`, `terminate-threads` and `inject-exit` via Mach
   (`task_for_pid`, `thread_terminate`), which need a signed, entitled build.
 - **Linux `inject-exit` on ARM64**, alongside the current x86-64 syscall injection.
 - **Linux `close-handles`** via `/proc/<pid>/fd`, where the platform allows it.
-- **GUI screenshots** generated in CI and shown here.
 
 ## 🏗️ Architecture
 
