@@ -1,0 +1,40 @@
+name: Screenshots
+
+# Regenerates the GUI screenshots in docs/screenshots. Manual: the committed images are refreshed
+# deliberately, not on every push, so runner-to-runner font differences never churn the repo. Run it,
+# download the artifact, and commit the images through a pull request.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  shoot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install GTK, Xvfb, ImageMagick and X build headers
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgtk-3-0 xvfb imagemagick clang libx11-dev
+      - name: Build the GUI
+        run: dotnet build UltimateProcessKiller.Gui/UltimateProcessKiller.Gui.csproj --configuration Release
+      - name: Compile the screenshot helpers
+        run: |
+          cd .github/workflows/scripts
+          clang screenshot-wm.c -o screenshot-wm $(pkg-config --cflags --libs x11)
+          clang lswin.c -o lswin $(pkg-config --cflags --libs x11)
+      - name: Capture the scenes
+        run: |
+          bash .github/workflows/scripts/shoot.sh overview docs/screenshots
+          bash .github/workflows/scripts/shoot.sh destructive docs/screenshots
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: docs/screenshots/*.png
+          if-no-files-found: error

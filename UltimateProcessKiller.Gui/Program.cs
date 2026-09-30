@@ -30,7 +30,10 @@ if (demo) {
   source = ProcessSnapshotSource.List;
 }
 
-var form = new MainForm(killer, source, demo);
+var sceneIndex = Array.IndexOf(args, "--scene");
+var scene = sceneIndex >= 0 && sceneIndex + 1 < args.Length ? args[sceneIndex + 1] : "overview";
+
+var form = new MainForm(killer, source, demo, scene);
 
 // --exit-after <seconds> auto-closes the window; the screenshot job uses it so a capture run can
 // never leave a GUI process hanging on the CI runner.
