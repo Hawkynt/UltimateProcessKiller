@@ -3,19 +3,20 @@ using UltimateProcessKiller;
 namespace UltimateProcessKiller.Gui;
 
 /// <summary>
-/// Deterministic data for <c>--demo</c> so the screenshots are reproducible: a fixed process list
-/// and a killer that only pretends, chosen so a shot never depends on whatever happens to be running.
+/// Deterministic data for <c>--demo</c> so the screenshots are reproducible: a fixed process tree and
+/// a killer that only pretends, chosen so a shot never depends on whatever happens to be running.
 /// </summary>
 internal static class DemoData {
+  // Parent ids wire these into a small tree rooted at systemd, so the tree view has something to show.
   public static IReadOnlyList<ProcessSnapshot> Processes { get; } = new[] {
-    new ProcessSnapshot(4821, "stubborn-daemon"),
-    new ProcessSnapshot(1337, "hung-editor"),
-    new ProcessSnapshot(2048, "runaway-worker"),
-    new ProcessSnapshot(777, "zombie-parent"),
-    new ProcessSnapshot(9001, "leaky-service"),
-    new ProcessSnapshot(160, "systemd"),
-    new ProcessSnapshot(512, "pulseaudio"),
-    new ProcessSnapshot(1024, "compositor"),
+    new ProcessSnapshot(160, "systemd", 0),
+    new ProcessSnapshot(512, "pulseaudio", 160),
+    new ProcessSnapshot(1024, "compositor", 160),
+    new ProcessSnapshot(1337, "hung-editor", 1024),
+    new ProcessSnapshot(777, "zombie-parent", 160),
+    new ProcessSnapshot(9001, "leaky-service", 160),
+    new ProcessSnapshot(4821, "stubborn-daemon", 160),
+    new ProcessSnapshot(2048, "runaway-worker", 4821),
   };
 
   /// <summary>A killer that reports every strategy as supported but never touches anything.</summary>
