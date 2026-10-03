@@ -9,8 +9,21 @@
     <RuntimeIdentifiers>win-x64;linux-x64;osx-arm64;osx-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
-  <ItemGroup>
-    <!-- The cross-platform UI: NativeForms core plus one native backend per desktop. -->
+  <PropertyGroup>
+    <!-- Development convenience: when the NativeForms working copy sits next to this repo, build
+         against it directly so toolkit fixes land without a NuGet round-trip; CI and every other
+         checkout fall back to the published packages. Point elsewhere with -p:NativeFormsRoot=... -->
+    <NativeFormsRoot Condition="'$(NativeFormsRoot)' == '' and Exists('$(MSBuildThisFileDirectory)../../NativeForms/NativeForms.Core/NativeForms.Core.csproj')">$(MSBuildThisFileDirectory)../../NativeForms/</NativeFormsRoot>
+  </PropertyGroup>
+
+  <!-- The cross-platform UI: NativeForms core plus one native backend per desktop. -->
+  <ItemGroup Condition="'$(NativeFormsRoot)' != ''">
+    <ProjectReference Include="$(NativeFormsRoot)NativeForms.Core/NativeForms.Core.csproj" />
+    <ProjectReference Include="$(NativeFormsRoot)NativeForms.Backends.Windows/NativeForms.Backends.Windows.csproj" />
+    <ProjectReference Include="$(NativeFormsRoot)NativeForms.Backends.Gtk/NativeForms.Backends.Gtk.csproj" />
+    <ProjectReference Include="$(NativeFormsRoot)NativeForms.Backends.MacOS/NativeForms.Backends.MacOS.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(NativeFormsRoot)' == ''">
     <PackageReference Include="Hawkynt.NativeForms" Version="1.0.0.245" />
     <PackageReference Include="Hawkynt.NativeForms.Backends.Windows" Version="1.0.0.70" />
     <PackageReference Include="Hawkynt.NativeForms.Backends.Gtk" Version="1.0.0.82" />
