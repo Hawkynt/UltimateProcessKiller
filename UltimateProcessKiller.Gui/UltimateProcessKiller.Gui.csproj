@@ -11,10 +11,10 @@
 
   <ItemGroup>
     <!-- The cross-platform UI: NativeForms core plus one native backend per desktop. -->
-    <PackageReference Include="Hawkynt.NativeForms" Version="1.0.0.227" />
-    <PackageReference Include="Hawkynt.NativeForms.Backends.Windows" Version="1.0.0.63" />
-    <PackageReference Include="Hawkynt.NativeForms.Backends.Gtk" Version="1.0.0.73" />
-    <PackageReference Include="Hawkynt.NativeForms.Backends.MacOS" Version="1.0.0.92" />
+    <PackageReference Include="Hawkynt.NativeForms" Version="1.0.0.245" />
+    <PackageReference Include="Hawkynt.NativeForms.Backends.Windows" Version="1.0.0.70" />
+    <PackageReference Include="Hawkynt.NativeForms.Backends.Gtk" Version="1.0.0.82" />
+    <PackageReference Include="Hawkynt.NativeForms.Backends.MacOS" Version="1.0.0.98" />
   </ItemGroup>
 
   <ItemGroup>

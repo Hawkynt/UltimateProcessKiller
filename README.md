@@ -202,7 +202,7 @@ dotnet test -c Release
 
 Build a single self-contained executable for one platform (no .NET install needed to run it). Each app
 carries publish profiles for `win-x64`, `linux-x64` and `osx-arm64`, so Visual Studio's **Publish** and
-the command line produce the same trimmed single file:
+the command line produce the same single-file NativeAOT executable:
 
 ```bash
 dotnet publish UltimateProcessKiller.Cli -c Release -p:PublishProfile=linux-x64   # or win-x64 / osx-arm64
